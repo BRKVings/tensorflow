@@ -209,7 +209,7 @@ The input tensors are all required to have size 1 in the first dimension.
 
 For example:
 
-```prettyprint
+```
 # 'x' is [[1, 4]]
 # 'y' is [[2, 5]]
 # 'z' is [[3, 6]]
@@ -277,7 +277,7 @@ Etc.
 
 For example:
 
-```prettyprint
+```
 # 'x' is [1, 4]
 # 'y' is [2, 5]
 # 'z' is [3, 6]
@@ -394,8 +394,10 @@ output: A `Tensor` with the concatenation of values stacked along the
   in `concat_dim` where it has the sum of the sizes.
 )doc");
 
+// TODO(vivek.v.rane@intel.com): Prefix the op names with underscore if the ops
+// are not to be made user-accessible.
 #ifdef INTEL_MKL
-REGISTER_OP("MklConcatV2")
+REGISTER_OP("_MklConcatV2")
     .Input("values: N * T")
     .Input("axis: Tidx")
     .Input("mkl_values: N * uint8")
@@ -430,7 +432,7 @@ Computes offsets of concat inputs within its output.
 
 For example:
 
-```prettyprint
+```
 # 'x' is [2, 2, 7]
 # 'y' is [2, 3, 7]
 # 'z' is [2, 5, 7]
@@ -668,7 +670,7 @@ rank 2k with dimensions [D1,..., Dk, D1,..., Dk] where:
 
 For example:
 
-```prettyprint
+```
 # 'diagonal' is [1, 2, 3, 4]
 tf.diag(diagonal) ==> [[1, 0, 0, 0]
                        [0, 2, 0, 0]
@@ -720,7 +722,7 @@ tensor of rank `k` with dimensions `[D1,..., Dk]` where:
 
 For example:
 
-```prettyprint
+```
 # 'input' is [[1, 0, 0, 0]
               [0, 2, 0, 0]
               [0, 0, 3, 0]
@@ -766,7 +768,7 @@ tensor of rank `k+1` with dimensions [I, J, K, ..., N, N]` where:
 
 For example:
 
-```prettyprint
+```
 # 'diagonal' is [[1, 2, 3, 4], [5, 6, 7, 8]]
 
 and diagonal.shape = (2, 4)
@@ -878,7 +880,7 @@ The input must be at least a matrix.
 
 For example:
 
-```prettyprint
+```
 # 'input' is [[[1, 0, 0, 0]
                [0, 2, 0, 0]
                [0, 0, 3, 0]
@@ -925,7 +927,7 @@ The indicator function
 
 For example:
 
-```prettyprint
+```
 # if 'input' is [[ 0,  1,  2, 3]
                  [-1,  0,  1, 2]
                  [-2, -1,  0, 1]
@@ -944,7 +946,7 @@ tf.matrix_band_part(input, 2, 1) ==> [[ 0,  1,  0, 0]
 
 Useful special cases:
 
-```prettyprint
+```
  tf.matrix_band_part(input, 0, -1) ==> Upper triangular part.
  tf.matrix_band_part(input, -1, 0) ==> Lower triangular part.
  tf.matrix_band_part(input, 0, 0) ==> Diagonal.
@@ -996,7 +998,7 @@ of `tensor` must equal the number of elements in `dims`. In other words:
 
 For example:
 
-```prettyprint
+```
 # tensor 't' is [[[[ 0,  1,  2,  3],
 #                  [ 4,  5,  6,  7],
 #                  [ 8,  9, 10, 11]],
@@ -1072,7 +1074,7 @@ once, a InvalidArgument error is raised.
 
 For example:
 
-```prettyprint
+```
 # tensor 't' is [[[[ 0,  1,  2,  3],
 #                  [ 4,  5,  6,  7],
 #                  [ 8,  9, 10, 11]],
@@ -1243,7 +1245,7 @@ This operation creates a tensor of shape `dims` and fills it with `value`.
 
 For example:
 
-```prettyprint
+```
 # Output tensor has shape [2, 3].
 fill([2, 3], 9) ==> [[9, 9, 9]
                      [9, 9, 9]]
@@ -1352,7 +1354,7 @@ out-of-bound indices result in safe but unspecified behavior, which may include
 raising an error.
 
 <div style="width:70%; margin:auto; margin-bottom:10px; margin-top:20px;">
-<img style="width:100%" src="../../../images/Gather.png" alt>
+<img style="width:100%" src="https://www.tensorflow.org/images/Gather.png" alt>
 </div>
 )doc");
 
@@ -1394,20 +1396,17 @@ REGISTER_OP("GatherNd")
     .Doc(R"doc(
 Gather values or slices from `params` according to `indices`.
 
-`params` is a Tensor of rank `P` and `indices` is a Tensor of rank `Q`.
+`indices` is an integer tensor containing indices into `params`.  The last
+dimension of `indices` can be at most the rank of `params`:
 
-`indices` must be integer tensor, containing indices into `params`.
-It must be shape `[d_0, ..., d_{Q-2}, K]` where `0 < K <= P`.
+    indices.shape[-1] <= params.rank
 
-The innermost dimension of `indices` (with length `K`) corresponds to
-indices into elements (if `K = P`) or slices (if `K < P`) along the `K`th
-dimension of `params`.
+The last dimension of `indices` corresponds to elements
+(if `indices.shape[-1] = params.rank`) or slices
+(if `indices.shape[-1] < params.rank`) along dimension `indices.shape[-1]`
+of `params`.  The output tensor has shape
 
-Produces an output tensor with shape
-
-```
-[d_0, ..., d_{Q-2}, params.shape[K], ..., params.shape[P-1]].
-```
+    indices.shape[:-1] + params.shape[indices.shape[-1]:]
 
 Some examples below.
 
@@ -1486,10 +1485,10 @@ Batched indexing into a 3-tensor:
     output = [['b0', 'b1'], ['d0', 'c1']]
 ```
 
-params: `P-D`.  The tensor from which to gather values.
-indices: `Q-D`.  Index tensor having shape `[d_0, ..., d_{Q-2}, K]`.
-output: `(P+Q-K-1)-D`.  Values from `params` gathered from indices given by
-  `indices`.
+params: The tensor from which to gather values.
+indices: Index tensor.
+output: Values from `params` gathered from indices given by `indices`, with
+  shape `indices.shape[:-1] + params.shape[indices.shape[-1]:]`.
 )doc");
 
 // --------------------------------------------------------------------------
@@ -1611,7 +1610,7 @@ implied by `shape` must be the same as the number of elements in `tensor`.
 
 For example:
 
-```prettyprint
+```
 # tensor 't' is [1, 2, 3, 4, 5, 6, 7, 8, 9]
 # tensor 't' has shape [9]
 reshape(t, [3, 3]) ==> [[1, 2, 3],
@@ -1658,6 +1657,21 @@ reshape(t, []) ==> 7
 shape: Defines the shape of the output tensor.
 )Doc");
 
+#ifdef INTEL_MKL
+REGISTER_OP("_MklReshape")
+    .Input("tensor: T")
+    .Input("shape: Tshape")
+    .Input("mkl_tensor: uint8")
+    .Input("mkl_shape: uint8")
+    .Output("output: T")
+    .Output("mkl_output: uint8")
+    .Attr("T: type")
+    .Attr("Tshape: {int32, int64} = DT_INT32")
+    .SetShapeFn([](InferenceContext* c) { return SetOutputShapeForReshape(c); })
+    .Doc(R"Doc( MKL implementation of ReshapeOp.
+)Doc");
+#endif  // INTEL_MKL
+
 // --------------------------------------------------------------------------
 REGISTER_OP("InvertPermutation")
     .Input("x: T")
@@ -1683,7 +1697,7 @@ The values must include 0. There can be no duplicate values or negative values.
 
 For example:
 
-```prettyprint
+```
 # tensor `x` is [3, 4, 0, 2, 1]
 invert_permutation(x) ==> [2, 4, 3, 0, 1]
 ```
@@ -1788,7 +1802,7 @@ in the unique output `y`. In other words:
 
 For example:
 
-```prettyprint
+```
 # tensor 'x' is [1, 1, 2, 4, 4, 4, 7, 8, 8]
 y, idx = unique(x)
 y ==> [1, 2, 4, 7, 8]
@@ -1828,7 +1842,7 @@ contains the count of each element of `y` in `x`. In other words:
 
 For example:
 
-```prettyprint
+```
 # tensor 'x' is [1, 1, 2, 4, 4, 4, 7, 8, 8]
 y, idx, count = unique_with_counts(x)
 y ==> [1, 2, 4, 7, 8]
@@ -1873,7 +1887,7 @@ This operation returns a 1-D integer tensor representing the shape of `input`.
 
 For example:
 
-```prettyprint
+```
 # 't' is [[[1, 1, 1], [2, 2, 2]], [[3, 3, 3], [4, 4, 4]]]
 shape(t) ==> [2, 2, 3]
 ```
@@ -1954,7 +1968,7 @@ slice `i`, with the first `seq_lengths[i]` slices along dimension
 
 For example:
 
-```prettyprint
+```
 # Given this:
 batch_dim = 0
 seq_dim = 1
@@ -1976,7 +1990,7 @@ output[3, 2:, :, ...] = input[3, 2:, :, ...]
 
 In contrast, if:
 
-```prettyprint
+```
 # Given this:
 batch_dim = 2
 seq_dim = 0
@@ -2017,7 +2031,7 @@ This operation returns an integer representing the rank of `input`.
 
 For example:
 
-```prettyprint
+```
 # 't' is [[[1, 1, 1], [2, 2, 2]], [[3, 3, 3], [4, 4, 4]]]
 # shape of tensor 't' is [2, 2, 3]
 rank(t) ==> 3
@@ -2043,7 +2057,7 @@ This operation returns an integer representing the number of elements in
 
 For example:
 
-```prettyprint
+```
 # 't' is [[[1, 1,, 1], [2, 2, 2]], [[3, 3, 3], [4, 4, 4]]]]
 size(t) ==> 12
 ```
@@ -2276,7 +2290,7 @@ encoding is best understand by considering a non-trivial example. In
 particular,
 `foo[1, 2:4, None, ..., :-3:-1, :]` will be encoded as
 
-```prettyprint
+```
 begin = [1, 2, x, x, 0, x] # x denotes don't care (usually 0)
 end = [2, 4, x, x, -3, x]
 strides = [1, 1, x, x, -1, 1]
@@ -2498,7 +2512,7 @@ the output tensor can vary depending on how many true values there are in
 
 For example:
 
-```prettyprint
+```
 # 'input' tensor is [[True, False]
 #                    [True, False]]
 # 'input' has two true values, so output has two coordinates.
@@ -2602,7 +2616,7 @@ The padded size of each dimension D of the output is:
 
 For example:
 
-```prettyprint
+```
 # 't' is [[1, 1], [2, 2]]
 # 'paddings' is [[1, 1], [2, 2]]
 # rank of 't' is 2
@@ -2641,7 +2655,7 @@ The padded size of each dimension D of the output is:
 
 For example:
 
-```prettyprint
+```
 # 't' is [[1, 2, 3], [4, 5, 6]].
 # 'paddings' is [[1, 1]], [2, 2]].
 # 'mode' is SYMMETRIC.
@@ -2737,7 +2751,7 @@ The folded size of each dimension D of the output is:
 
 For example:
 
-```prettyprint
+```
 # 't' is [[1, 2, 3], [4, 5, 6], [7, 8, 9]].
 # 'paddings' is [[0, 1]], [0, 1]].
 # 'mode' is SYMMETRIC.
@@ -2913,7 +2927,7 @@ which will make the shape `[1, height, width, channels]`.
 
 Other examples:
 
-```prettyprint
+```
 # 't' is a tensor of shape [2]
 shape(expand_dims(t, 0)) ==> [1, 2]
 shape(expand_dims(t, 1)) ==> [2, 1]
@@ -3015,14 +3029,14 @@ dimensions, you can remove specific size 1 dimensions by specifying
 
 For example:
 
-```prettyprint
+```
 # 't' is a tensor of shape [1, 2, 1, 3, 1, 1]
 shape(squeeze(t)) ==> [2, 3]
 ```
 
 Or, to remove specific size 1 dimensions:
 
-```prettyprint
+```
 # 't' is a tensor of shape [1, 2, 1, 3, 1, 1]
 shape(squeeze(t, [2, 4])) ==> [1, 2, 3, 1]
 ```
@@ -3065,14 +3079,14 @@ position of each `out` element in `x`. In other words:
 
 For example, given this input:
 
-```prettyprint
+```
 x = [1, 2, 3, 4, 5, 6]
 y = [1, 3, 5]
 ```
 
 This operation would return:
 
-```prettyprint
+```
 out ==> [2, 4, 6]
 idx ==> [1, 3, 5]
 ```
@@ -3331,34 +3345,34 @@ Some examples:
 (1) For the following input of shape `[1, 2, 2, 1]`, `block_shape = [2, 2]`, and
     `paddings = [[0, 0], [0, 0]]`:
 
-```prettyprint
+```
 x = [[[[1], [2]], [[3], [4]]]]
 ```
 
 The output tensor has shape `[4, 1, 1, 1]` and value:
 
-```prettyprint
+```
 [[[[1]]], [[[2]]], [[[3]]], [[[4]]]]
 ```
 
 (2) For the following input of shape `[1, 2, 2, 3]`, `block_shape = [2, 2]`, and
     `paddings = [[0, 0], [0, 0]]`:
 
-```prettyprint
+```
 x = [[[[1, 2, 3], [4, 5, 6]],
       [[7, 8, 9], [10, 11, 12]]]]
 ```
 
 The output tensor has shape `[4, 1, 1, 3]` and value:
 
-```prettyprint
+```
 [[[1, 2, 3]], [[4, 5, 6]], [[7, 8, 9]], [[10, 11, 12]]]
 ```
 
 (3) For the following input of shape `[1, 4, 4, 1]`, `block_shape = [2, 2]`, and
     `paddings = [[0, 0], [0, 0]]`:
 
-```prettyprint
+```
 x = [[[[1],   [2],  [3],  [4]],
       [[5],   [6],  [7],  [8]],
       [[9],  [10], [11],  [12]],
@@ -3367,7 +3381,7 @@ x = [[[[1],   [2],  [3],  [4]],
 
 The output tensor has shape `[4, 2, 2, 1]` and value:
 
-```prettyprint
+```
 x = [[[[1], [3]], [[9], [11]]],
      [[[2], [4]], [[10], [12]]],
      [[[5], [7]], [[13], [15]]],
@@ -3377,7 +3391,7 @@ x = [[[[1], [3]], [[9], [11]]],
 (4) For the following input of shape `[2, 2, 4, 1]`, block_shape = `[2, 2]`, and
     paddings = `[[0, 0], [2, 0]]`:
 
-```prettyprint
+```
 x = [[[[1],   [2],  [3],  [4]],
       [[5],   [6],  [7],  [8]]],
      [[[9],  [10], [11],  [12]],
@@ -3386,7 +3400,7 @@ x = [[[[1],   [2],  [3],  [4]],
 
 The output tensor has shape `[8, 1, 3, 1]` and value:
 
-```prettyprint
+```
 x = [[[[0], [1], [3]]], [[[0], [9], [11]]],
      [[[0], [2], [4]]], [[[0], [10], [12]]],
      [[[0], [5], [7]]], [[[0], [13], [15]]],
@@ -3460,32 +3474,32 @@ Some examples:
 
 (1) For the following input of shape `[1, 2, 2, 1]` and block_size of 2:
 
-```prettyprint
+```
 x = [[[[1], [2]], [[3], [4]]]]
 ```
 
 The output tensor has shape `[4, 1, 1, 1]` and value:
 
-```prettyprint
+```
 [[[[1]]], [[[2]]], [[[3]]], [[[4]]]]
 ```
 
 (2) For the following input of shape `[1, 2, 2, 3]` and block_size of 2:
 
-```prettyprint
+```
 x = [[[[1, 2, 3], [4, 5, 6]],
       [[7, 8, 9], [10, 11, 12]]]]
 ```
 
 The output tensor has shape `[4, 1, 1, 3]` and value:
 
-```prettyprint
+```
 [[[1, 2, 3]], [[4, 5, 6]], [[7, 8, 9]], [[10, 11, 12]]]
 ```
 
 (3) For the following input of shape `[1, 4, 4, 1]` and block_size of 2:
 
-```prettyprint
+```
 x = [[[[1],   [2],  [3],  [4]],
       [[5],   [6],  [7],  [8]],
       [[9],  [10], [11],  [12]],
@@ -3494,7 +3508,7 @@ x = [[[[1],   [2],  [3],  [4]],
 
 The output tensor has shape `[4, 2, 2, 1]` and value:
 
-```prettyprint
+```
 x = [[[[1], [3]], [[9], [11]]],
      [[[2], [4]], [[10], [12]]],
      [[[5], [7]], [[13], [15]]],
@@ -3503,7 +3517,7 @@ x = [[[[1], [3]], [[9], [11]]],
 
 (4) For the following input of shape `[2, 2, 4, 1]` and block_size of 2:
 
-```prettyprint
+```
 x = [[[[1],   [2],  [3],  [4]],
       [[5],   [6],  [7],  [8]]],
      [[[9],  [10], [11],  [12]],
@@ -3512,7 +3526,7 @@ x = [[[[1],   [2],  [3],  [4]],
 
 The output tensor has shape `[8, 1, 2, 1]` and value:
 
-```prettyprint
+```
 x = [[[[1], [3]]], [[[9], [11]]], [[[2], [4]]], [[[10], [12]]],
      [[[5], [7]]], [[[13], [15]]], [[[6], [8]]], [[[14], [16]]]]
 ```
@@ -3598,26 +3612,26 @@ Some examples:
 (1) For the following input of shape `[4, 1, 1, 1]`, `block_shape = [2, 2]`, and
     `crops = [[0, 0], [0, 0]]`:
 
-```prettyprint
+```
 [[[[1]]], [[[2]]], [[[3]]], [[[4]]]]
 ```
 
 The output tensor has shape `[1, 2, 2, 1]` and value:
 
-```prettyprint
+```
 x = [[[[1], [2]], [[3], [4]]]]
 ```
 
 (2) For the following input of shape `[4, 1, 1, 3]`, `block_shape = [2, 2]`, and
     `crops = [[0, 0], [0, 0]]`:
 
-```prettyprint
+```
 [[[1, 2, 3]], [[4, 5, 6]], [[7, 8, 9]], [[10, 11, 12]]]
 ```
 
 The output tensor has shape `[1, 2, 2, 3]` and value:
 
-```prettyprint
+```
 x = [[[[1, 2, 3], [4, 5, 6]],
       [[7, 8, 9], [10, 11, 12]]]]
 ```
@@ -3625,7 +3639,7 @@ x = [[[[1, 2, 3], [4, 5, 6]],
 (3) For the following input of shape `[4, 2, 2, 1]`, `block_shape = [2, 2]`, and
     `crops = [[0, 0], [0, 0]]`:
 
-```prettyprint
+```
 x = [[[[1], [3]], [[9], [11]]],
      [[[2], [4]], [[10], [12]]],
      [[[5], [7]], [[13], [15]]],
@@ -3634,7 +3648,7 @@ x = [[[[1], [3]], [[9], [11]]],
 
 The output tensor has shape `[1, 4, 4, 1]` and value:
 
-```prettyprint
+```
 x = [[[1],   [2],  [3],  [4]],
      [[5],   [6],  [7],  [8]],
      [[9],  [10], [11],  [12]],
@@ -3644,7 +3658,7 @@ x = [[[1],   [2],  [3],  [4]],
 (4) For the following input of shape `[8, 1, 3, 1]`, `block_shape = [2, 2]`, and
     `crops = [[0, 0], [2, 0]]`:
 
-```prettyprint
+```
 x = [[[[0], [1], [3]]], [[[0], [9], [11]]],
      [[[0], [2], [4]]], [[[0], [10], [12]]],
      [[[0], [5], [7]]], [[[0], [13], [15]]],
@@ -3653,7 +3667,7 @@ x = [[[[0], [1], [3]]], [[[0], [9], [11]]],
 
 The output tensor has shape `[2, 2, 4, 1]` and value:
 
-```prettyprint
+```
 x = [[[[1],   [2],  [3],  [4]],
       [[5],   [6],  [7],  [8]]],
      [[[9],  [10], [11],  [12]],
@@ -3718,32 +3732,32 @@ Some examples:
 
 (1) For the following input of shape `[4, 1, 1, 1]` and block_size of 2:
 
-```prettyprint
+```
 [[[[1]]], [[[2]]], [[[3]]], [[[4]]]]
 ```
 
 The output tensor has shape `[1, 2, 2, 1]` and value:
 
-```prettyprint
+```
 x = [[[[1], [2]], [[3], [4]]]]
 ```
 
 (2) For the following input of shape `[4, 1, 1, 3]` and block_size of 2:
 
-```prettyprint
+```
 [[[1, 2, 3]], [[4, 5, 6]], [[7, 8, 9]], [[10, 11, 12]]]
 ```
 
 The output tensor has shape `[1, 2, 2, 3]` and value:
 
-```prettyprint
+```
 x = [[[[1, 2, 3], [4, 5, 6]],
       [[7, 8, 9], [10, 11, 12]]]]
 ```
 
 (3) For the following input of shape `[4, 2, 2, 1]` and block_size of 2:
 
-```prettyprint
+```
 x = [[[[1], [3]], [[9], [11]]],
      [[[2], [4]], [[10], [12]]],
      [[[5], [7]], [[13], [15]]],
@@ -3752,7 +3766,7 @@ x = [[[[1], [3]], [[9], [11]]],
 
 The output tensor has shape `[1, 4, 4, 1]` and value:
 
-```prettyprint
+```
 x = [[[1],   [2],  [3],  [4]],
      [[5],   [6],  [7],  [8]],
      [[9],  [10], [11],  [12]],
@@ -3761,14 +3775,14 @@ x = [[[1],   [2],  [3],  [4]],
 
 (4) For the following input of shape `[8, 1, 2, 1]` and block_size of 2:
 
-```prettyprint
+```
 x = [[[[1], [3]]], [[[9], [11]]], [[[2], [4]]], [[[10], [12]]],
      [[[5], [7]]], [[[13], [15]]], [[[6], [8]]], [[[14], [16]]]]
 ```
 
 The output tensor has shape `[2, 2, 4, 1]` and value:
 
-```prettyprint
+```
 x = [[[[1], [3]], [[5], [7]]],
      [[[2], [4]], [[10], [12]]],
      [[[5], [7]], [[13], [15]]],
@@ -3834,14 +3848,14 @@ purely convolutional models.
 
 For example, given this input of shape `[1, 2, 2, 1]`, and block_size of 2:
 
-```prettyprint
+```
 x = [[[[1], [2]],
       [[3], [4]]]]
 ```
 
 This operation will output a tensor of shape `[1, 1, 1, 4]`:
 
-```prettyprint
+```
 [[[[1, 2, 3, 4]]]]
 ```
 
@@ -3852,7 +3866,7 @@ The output element shape is `[1, 1, 4]`.
 
 For an input tensor with larger depth, here of shape `[1, 2, 2, 3]`, e.g.
 
-```prettyprint
+```
 x = [[[[1, 2, 3], [4, 5, 6]],
       [[7, 8, 9], [10, 11, 12]]]]
 ```
@@ -3860,13 +3874,13 @@ x = [[[[1, 2, 3], [4, 5, 6]],
 This operation, for block_size of 2, will return the following tensor of shape
 `[1, 1, 1, 12]`
 
-```prettyprint
+```
 [[[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]]]]
 ```
 
 Similarly, for the following input of shape `[1 4 4 1]`, and a block size of 2:
 
-```prettyprint
+```
 x = [[[[1],   [2],  [5],  [6]],
       [[3],   [4],  [7],  [8]],
       [[9],  [10], [13],  [14]],
@@ -3875,7 +3889,7 @@ x = [[[[1],   [2],  [5],  [6]],
 
 the operator will return the following tensor of shape `[1 2 2 4]`:
 
-```prettyprint
+```
 x = [[[[1, 2, 3, 4],
        [5, 6, 7, 8]],
       [[9, 10, 11, 12],
@@ -3944,14 +3958,14 @@ purely convolutional models.
 
 For example, given this input of shape `[1, 1, 1, 4]`, and a block size of 2:
 
-```prettyprint
+```
 x = [[[[1, 2, 3, 4]]]]
 
 ```
 
 This operation will output a tensor of shape `[1, 2, 2, 1]`:
 
-```prettyprint
+```
    [[[[1], [2]],
      [[3], [4]]]]
 ```
@@ -3963,14 +3977,14 @@ The output element shape is `[2, 2, 1]`.
 
 For an input tensor with larger depth, here of shape `[1, 1, 1, 12]`, e.g.
 
-```prettyprint
+```
 x = [[[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]]]]
 ```
 
 This operation, for block size of 2, will return the following tensor of shape
 `[1, 2, 2, 3]`
 
-```prettyprint
+```
    [[[[1, 2, 3], [4, 5, 6]],
      [[7, 8, 9], [10, 11, 12]]]]
 
@@ -3978,7 +3992,7 @@ This operation, for block size of 2, will return the following tensor of shape
 
 Similarly, for the following input of shape `[1 2 2 4]`, and a block size of 2:
 
-```prettyprint
+```
 x =  [[[[1, 2, 3, 4],
        [5, 6, 7, 8]],
       [[9, 10, 11, 12],
@@ -3987,7 +4001,7 @@ x =  [[[[1, 2, 3, 4],
 
 the operator will return the following tensor of shape `[1 4 4 1]`:
 
-```prettyprint
+```
 x = [[ [1],   [2],  [5],  [6]],
      [ [3],   [4],  [7],  [8]],
      [ [9],  [10], [13],  [14]],
@@ -4733,37 +4747,35 @@ REGISTER_OP("ScatterNd")
     .Attr("T: type")
     .Attr("Tindices: {int32, int64}")
     .SetShapeFn(ScatterNdShape)
-    .Doc(
-        R"doc(Creates a new tensor by applying sparse `updates` to individual
-values or slices within a zero tensor of the given `shape` tensor according to
+    .Doc(R"doc(
+Scatter `updates` into a new (initially zero) tensor according to `indices`.
+
+Creates a new tensor by applying sparse `updates` to individual
+values or slices within a zero tensor of the given `shape` according to
 indices.  This operator is the inverse of the [tf.gather_nd](#gather_nd)
 operator which extracts values or slices from a given tensor.
 
-TODO(simister): Add a link to Variable.__getitem__ documentation on slice
-syntax.
+**WARNING**: The order in which updates are applied is nondeterministic, so the
+output will be nondeterministic if `indices` contains duplicates.
 
-`shape` is a `TensorShape` with rank `P` and `indices` is a `Tensor` of rank
-`Q`.
+`indices` is an integer tensor containing indices into a new tensor of shape
+`shape`.  The last dimension of `indices` can be at most the rank of `shape`:
 
-`indices` must be integer tensor, containing indices into `shape`.
-It must be shape `[d_0, ..., d_{Q-2}, K]` where `0 < K <= P`.
+    indices.shape[-1] <= shape.rank
 
-The innermost dimension of `indices` (with length `K`) corresponds to
-indices into elements (if `K = P`) or slices (if `K < P`) along the `K`th
-dimension of `shape`.
+The last dimension of `indices` corresponds to indices into elements
+(if `indices.shape[-1] = shape.rank`) or slices
+(if `indices.shape[-1] < shape.rank`) along dimension `indices.shape[-1]` of
+`shape`.  `updates` is a tensor with shape
 
-`updates` is Tensor of rank `Q-1+P-K` with shape:
-
-```
-[d_0, ..., d_{Q-2}, shape[K], ..., shape[P-1]].
-```
+    indices.shape[:-1] + shape[indices.shape[-1]:]
 
 The simplest form of scatter is to insert individual elements in a tensor by
 index. For example, say we want to insert 4 scattered elements in a rank-1
 tensor with 8 elements.
 
 <div style="width:70%; margin:auto; margin-bottom:10px; margin-top:20px;">
-<img style="width:100%" src="../../images/ScatterNd1.png" alt>
+<img style="width:100%" src="https://www.tensorflow.org/images/ScatterNd1.png" alt>
 </div>
 
 In Python, this scatter operation would look like this:
@@ -4774,7 +4786,7 @@ In Python, this scatter operation would look like this:
     shape = tf.constant([8])
     scatter = tf.scatter_nd(indices, updates, shape)
     with tf.Session() as sess:
-      print sess.run(scatter)
+      print(sess.run(scatter))
 ```
 
 The resulting tensor would look like this:
@@ -4786,7 +4798,7 @@ example, if we wanted to insert two slices in the first dimension of a
 rank-3 tensor with two matrices of new values.
 
 <div style="width:70%; margin:auto; margin-bottom:10px; margin-top:20px;">
-<img style="width:100%" src="../../images/ScatterNd2.png" alt>
+<img style="width:100%" src="https://www.tensorflow.org/images/ScatterNd2.png" alt>
 </div>
 
 In Python, this scatter operation would look like this:
@@ -4800,7 +4812,7 @@ In Python, this scatter operation would look like this:
     shape = tf.constant([4, 4, 4])
     scatter = tf.scatter_nd(indices, updates, shape)
     with tf.Session() as sess:
-      print sess.run(scatter)
+      print(sess.run(scatter))
 ```
 
 The resulting tensor would look like this:
@@ -4810,11 +4822,9 @@ The resulting tensor would look like this:
      [[5, 5, 5, 5], [6, 6, 6, 6], [7, 7, 7, 7], [8, 8, 8, 8]],
      [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]]
 
-indices: A Tensor. Must be one of the following types: int32, int64.
-  A tensor of indices into ref.
-updates: A Tensor. Must have the same type as tensor. A tensor of updated values
-  to store in ref.
-shape: A vector. The shape of the resulting tensor.
+indices: Index tensor.
+updates: Updates to scatter into output.
+shape: 1-D. The shape of the resulting tensor.
 output: A new tensor with the given shape and updates applied according
   to the indices.
 )doc");
@@ -4822,6 +4832,7 @@ output: A new tensor with the given shape and updates applied according
 REGISTER_OP("FakeQuantWithMinMaxArgs")
     .Attr("min: float = -6.0")
     .Attr("max: float = 6.0")
+    .Attr("num_bits: int = 8")
     .Input("inputs: float")
     .Output("outputs: float")
     .SetShapeFn(shape_inference::UnchangedShape)
@@ -4831,6 +4842,7 @@ Fake-quantize the 'inputs' tensor, type float to 'outputs' tensor of same type.
 Attributes [min; max] define the clamping range for the 'inputs' data.  Op
 divides this range into 255 steps (total of 256 values), then replaces each
 'inputs' value with the closest of the quantized step values.
+'num_bits' is the bitwidth of the quantization; between 2 and 8, inclusive.
 
 Quantization is called fake since the output is still in floating point.
 )doc");
@@ -4838,6 +4850,7 @@ Quantization is called fake since the output is still in floating point.
 REGISTER_OP("FakeQuantWithMinMaxArgsGradient")
     .Attr("min: float = -6.0")
     .Attr("max: float = 6.0")
+    .Attr("num_bits: int = 8")
     .Input("gradients: float")
     .Input("inputs: float")
     .Output("backprops: float")
@@ -4852,6 +4865,7 @@ backprops: Backpropagated gradients below the FakeQuantWithMinMaxArgs operation:
 )doc");
 
 REGISTER_OP("FakeQuantWithMinMaxVars")
+    .Attr("num_bits: int = 8")
     .Input("inputs: float")
     .Input("min: float")
     .Input("max: float")
@@ -4870,11 +4884,13 @@ and `max` to 'outputs' tensor of same shape as `inputs`.
 [min; max] is the clamping range for the 'inputs' data.  Op divides this range
 into 255 steps (total of 256 values), then replaces each 'inputs' value with the
 closest of the quantized step values.
+'num_bits' is the bitwidth of the quantization; between 2 and 8, inclusive.
 
 This operation has a gradient and thus allows for training `min` and `max` values.
 )doc");
 
 REGISTER_OP("FakeQuantWithMinMaxVarsGradient")
+    .Attr("num_bits: int = 8")
     .Input("gradients: float")
     .Input("inputs: float")
     .Input("min: float")
@@ -4903,6 +4919,7 @@ Compute gradients for a FakeQuantWithMinMaxVars operation.
 gradients: Backpropagated gradients above the FakeQuantWithMinMaxVars operation.
 inputs: Values passed as inputs to the FakeQuantWithMinMaxVars operation.
 min, max: Quantization interval, scalar floats.
+num_bits: The bitwidth of the quantization; between 2 and 8, inclusive.
 backprops_wrt_input: Backpropagated gradients w.r.t. inputs:
   `gradients * (inputs >= min && inputs <= max)`.
 backprop_wrt_min: Backpropagated gradients w.r.t. min parameter:
@@ -4912,6 +4929,7 @@ backprop_wrt_max: Backpropagated gradients w.r.t. max parameter:
 )doc");
 
 REGISTER_OP("FakeQuantWithMinMaxVarsPerChannel")
+    .Attr("num_bits: int = 8")
     .Input("inputs: float")
     .Input("min: float")
     .Input("max: float")
@@ -4938,11 +4956,13 @@ to 'outputs' tensor of same shape as `inputs`.
 [min; max] is the clamping range for the 'inputs' data in the corresponding
 depth channel.  Op divides this range into 255 steps (total of 256 values), then
 replaces each 'inputs' value with the closest of the quantized step values.
+'num_bits' is the bitwidth of the quantization; between 2 and 8, inclusive.
 
 This operation has a gradient and thus allows for training `min` and `max` values.
 )doc");
 
 REGISTER_OP("FakeQuantWithMinMaxVarsPerChannelGradient")
+    .Attr("num_bits: int = 8")
     .Input("gradients: float")
     .Input("inputs: float")
     .Input("min: float")
@@ -4976,6 +4996,7 @@ gradients: Backpropagated gradients above the FakeQuantWithMinMaxVars operation,
 inputs: Values passed as inputs to the FakeQuantWithMinMaxVars operation, shape
   same as `gradients`.
 min, max: Quantization interval, floats of shape `[d]`.
+num_bits: The bitwidth of the quantization; between 2 and 8, inclusive.
 backprops_wrt_input: Backpropagated gradients w.r.t. inputs, shape same as
   `inputs`:
     `gradients * (inputs >= min && inputs <= max)`.
@@ -4986,7 +5007,7 @@ backprop_wrt_max: Backpropagated gradients w.r.t. max parameter, shape `[d]`:
 )doc");
 
 #ifdef INTEL_MKL
-REGISTER_OP("MklConcat")
+REGISTER_OP("_MklConcat")
     .Input("concat_dim: int32")
     .Input("values: N * T")
     .Input("mkl_concat_dim: uint8")

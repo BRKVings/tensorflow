@@ -13,7 +13,7 @@ filegroup(
 )
 
 filegroup(
-    name = "android_srcs",
+    name = "mobile_srcs",
     srcs = glob(
         [
             "*_optimizer.*",
@@ -23,6 +23,12 @@ filegroup(
             "graph_rewriter.*",
         ],
     ),
+    visibility = ["//tensorflow:__subpackages__"],
+)
+
+alias(
+    name = "android_srcs",
+    actual = ":mobile_srcs",
     visibility = ["//tensorflow:__subpackages__"],
 )
 
@@ -40,6 +46,7 @@ cc_library(
         "//tensorflow/core:protos_all_cc",
         "//tensorflow/core/grappler:devices",
         "//tensorflow/core/grappler:grappler_item",
+        "//tensorflow/core/grappler:op_types",
         "//tensorflow/core/grappler:utils",
         "//tensorflow/core/grappler/clusters:cluster",
     ],

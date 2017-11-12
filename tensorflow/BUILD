@@ -14,9 +14,7 @@ exports_files([
 # Config setting for determining if we are building for Android.
 config_setting(
     name = "android",
-    values = {
-        "crosstool_top": "//external:android/crosstool",
-    },
+    values = {"crosstool_top": "//external:android/crosstool"},
     visibility = ["//visibility:public"],
 )
 
@@ -76,15 +74,19 @@ config_setting(
 
 config_setting(
     name = "ios",
-    values = {
-        "crosstool_top": "//tools/osx/crosstool:crosstool",
-    },
+    values = {"crosstool_top": "//tools/osx/crosstool:crosstool"},
     visibility = ["//visibility:public"],
 )
 
 config_setting(
     name = "linux_x86_64",
     values = {"cpu": "k8"},
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "linux_ppc64le",
+    values = {"cpu": "ppc"},
     visibility = ["//visibility:public"],
 )
 
@@ -110,17 +112,20 @@ config_setting(
     visibility = ["//visibility:public"],
 )
 
+# TODO(jhseu): Enable on other platforms other than Linux.
 config_setting(
-    name = "linux_ppc64le",
-    values = {"cpu": "ppc"},
+    name = "with_jemalloc_linux_x86_64",
+    values = {
+        "cpu": "k8",
+        "define": "with_jemalloc=true",
+    },
     visibility = ["//visibility:public"],
 )
 
-# TODO(jhseu): Enable on other platforms other than Linux.
 config_setting(
-    name = "with_jemalloc",
+    name = "with_jemalloc_linux_ppc64le",
     values = {
-        "cpu": "k8",
+        "cpu": "ppc",
         "define": "with_jemalloc=true",
     },
     visibility = ["//visibility:public"],
@@ -141,6 +146,12 @@ config_setting(
 config_setting(
     name = "with_xla_support",
     values = {"define": "with_xla_support=true"},
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "with_verbs_support",
+    values = {"define": "with_verbs_support=true"},
     visibility = ["//visibility:public"],
 )
 
@@ -202,6 +213,7 @@ filegroup(
         "//tensorflow/contrib:all_files",
         "//tensorflow/contrib/android:all_files",
         "//tensorflow/contrib/batching:all_files",
+        "//tensorflow/contrib/batching/kernels:all_files",
         "//tensorflow/contrib/batching/test_util:all_files",
         "//tensorflow/contrib/batching/util:all_files",
         "//tensorflow/contrib/bayesflow:all_files",
@@ -247,6 +259,7 @@ filegroup(
         "//tensorflow/contrib/opt:all_files",
         "//tensorflow/contrib/rnn:all_files",
         "//tensorflow/contrib/saved_model:all_files",
+        "//tensorflow/contrib/saved_model/cc/saved_model:all_files",
         "//tensorflow/contrib/seq2seq:all_files",
         "//tensorflow/contrib/session_bundle:all_files",
         "//tensorflow/contrib/session_bundle/example:all_files",
@@ -256,7 +269,9 @@ filegroup(
         "//tensorflow/contrib/solvers:all_files",
         "//tensorflow/contrib/sparsemax:all_files",
         "//tensorflow/contrib/specs:all_files",
+        "//tensorflow/contrib/staging:all_files",
         "//tensorflow/contrib/stat_summarizer:all_files",
+        "//tensorflow/contrib/stateless:all_files",
         "//tensorflow/contrib/tensor_forest:all_files",
         "//tensorflow/contrib/tensor_forest/hybrid:all_files",
         "//tensorflow/contrib/tensorboard:all_files",
@@ -264,6 +279,7 @@ filegroup(
         "//tensorflow/contrib/tfprof/python/tools/tfprof:all_files",
         "//tensorflow/contrib/training:all_files",
         "//tensorflow/contrib/util:all_files",
+        "//tensorflow/contrib/verbs:all_files",
         "//tensorflow/contrib/xla_tf_graph:all_files",
         "//tensorflow/core:all_files",
         "//tensorflow/core/debug:all_files",
@@ -299,7 +315,10 @@ filegroup(
         "//tensorflow/python:all_files",
         "//tensorflow/python/debug:all_files",
         "//tensorflow/python/estimator:all_files",
+        "//tensorflow/python/feature_column:all_files",
         "//tensorflow/python/kernel_tests:all_files",
+        "//tensorflow/python/kernel_tests/distributions:all_files",
+        "//tensorflow/python/ops/distributions:all_files",
         "//tensorflow/python/saved_model:all_files",
         "//tensorflow/python/tools:all_files",
         "//tensorflow/tensorboard:all_files",
@@ -307,13 +326,6 @@ filegroup(
         "//tensorflow/tensorboard/backend:all_files",
         "//tensorflow/tensorboard/backend/event_processing:all_files",
         "//tensorflow/tensorboard/components:all_files",
-        "//tensorflow/tensorboard/components/tf_text_dashboard:all_files",
-        "//tensorflow/tensorboard/components/vz_data_summary:all_files",
-        "//tensorflow/tensorboard/components/vz_line_chart:all_files",
-        "//tensorflow/tensorboard/components/vz_line_chart/demo:all_files",
-        "//tensorflow/tensorboard/components/vz_projector:all_files",
-        "//tensorflow/tensorboard/components/vz_sorting:all_files",
-        "//tensorflow/tensorboard/components/vz_sorting/test:all_files",
         "//tensorflow/tensorboard/lib:all_files",
         "//tensorflow/tensorboard/plugins:all_files",
         "//tensorflow/tensorboard/plugins/projector:all_files",

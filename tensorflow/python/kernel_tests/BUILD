@@ -980,6 +980,7 @@ cuda_py_test(
         "//tensorflow/python:framework_test_lib",
         "//tensorflow/python:gradients",
         "//tensorflow/python:math_ops",
+        "//tensorflow/python:state_ops",
         "//tensorflow/python:test_ops",
         "//tensorflow/python:variables",
     ],
@@ -2346,6 +2347,7 @@ cuda_py_test(
         "//tensorflow/python:gradients",
         "//tensorflow/python:math_ops",
         "//tensorflow/python:math_ops_gen",
+        "//tensorflow/python:nn_grad",
         "//tensorflow/python:platform",
         "//tensorflow/python:variables",
     ],
@@ -2564,6 +2566,18 @@ tf_py_test(
         "//tensorflow/python:framework_for_generated_wrappers",
         "//tensorflow/python:math_ops",
         "//tensorflow/python:random_ops",
+    ],
+)
+
+tf_py_test(
+    name = "bucketize_op_test",
+    size = "small",
+    srcs = ["bucketize_op_test.py"],
+    additional_deps = [
+        "//third_party/py/numpy",
+        "//tensorflow/python:client_testlib",
+        "//tensorflow/python:framework_for_generated_wrappers",
+        "//tensorflow/python:math_ops",
     ],
 )
 

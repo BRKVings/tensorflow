@@ -456,7 +456,7 @@ Status FunctionLibraryRuntimeImpl::Instantiate(
 void DumpGraph(StringPiece label, const Graph* g) {
   // TODO(zhifengc): Change Graph to record #nodes.
   VLOG(1) << "Graph " << label << " #nodes " << g->num_nodes() << " #edges "
-          << g->edges().size();
+          << g->num_edges();
   if (VLOG_IS_ON(2)) {
     for (const auto& line : str_util::Split(DebugString(g), '\n')) {
       VLOG(2) << "|| " << line;
@@ -604,7 +604,7 @@ struct CustomCreatorSingleton {
 
   void Set(CustomKernelCreator cb) {
     mutex_lock l(mu);
-    custom_creator = cb;
+    custom_creator = std::move(cb);
   }
 
   CustomKernelCreator Get() {
@@ -621,7 +621,7 @@ CustomCreatorSingleton* GetCustomCreatorSingleton() {
 }  // end namespace
 
 void RegisterDefaultCustomKernelCreator(CustomKernelCreator cb) {
-  GetCustomCreatorSingleton()->Set(cb);
+  GetCustomCreatorSingleton()->Set(std::move(cb));
 }
 
 FunctionLibraryRuntime* NewFunctionLibraryRuntime(
@@ -631,7 +631,7 @@ FunctionLibraryRuntime* NewFunctionLibraryRuntime(
     CustomKernelCreator custom_kernel_creator) {
   return new FunctionLibraryRuntimeImpl(dmgr, env, device, graph_def_version,
                                         lib_def, optimizer_options,
-                                        custom_kernel_creator);
+                                        std::move(custom_kernel_creator));
 }
 
 FunctionLibraryRuntime* NewFunctionLibraryRuntime(

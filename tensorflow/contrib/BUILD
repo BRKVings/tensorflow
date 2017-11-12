@@ -13,6 +13,7 @@ py_library(
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
+        "//tensorflow/contrib/batching:batch_py",
         "//tensorflow/contrib/bayesflow:bayesflow_py",
         "//tensorflow/contrib/cloud:cloud_py",
         "//tensorflow/contrib/compiler:compiler_py",
@@ -58,7 +59,9 @@ py_library(
         "//tensorflow/contrib/solvers:solvers_py",
         "//tensorflow/contrib/sparsemax:sparsemax_py",
         "//tensorflow/contrib/specs",
+        "//tensorflow/contrib/staging",
         "//tensorflow/contrib/stat_summarizer:stat_summarizer_py",
+        "//tensorflow/contrib/stateless",
         "//tensorflow/contrib/tensor_forest:init_py",
         "//tensorflow/contrib/tensorboard",
         "//tensorflow/contrib/testing:testing_py",
@@ -72,10 +75,11 @@ cc_library(
     name = "contrib_kernels",
     visibility = ["//visibility:public"],
     deps = [
+        "//tensorflow/contrib/batching:batch_ops_kernels",
         "//tensorflow/contrib/factorization/kernels:all_kernels",
         "//tensorflow/contrib/input_pipeline:input_pipeline_ops_kernels",
-        "//tensorflow/contrib/layers:bucketization_op_kernel",
         "//tensorflow/contrib/layers:sparse_feature_cross_op_kernel",
+        "//tensorflow/contrib/nccl:nccl_kernels",
         "//tensorflow/contrib/tensor_forest:tensor_forest_kernels",
     ],
 )
@@ -84,11 +88,12 @@ cc_library(
     name = "contrib_ops_op_lib",
     visibility = ["//visibility:public"],
     deps = [
+        "//tensorflow/contrib/batching:batch_ops_op_lib",
         "//tensorflow/contrib/factorization:all_ops",
         "//tensorflow/contrib/framework:all_ops",
         "//tensorflow/contrib/input_pipeline:input_pipeline_ops_op_lib",
-        "//tensorflow/contrib/layers:bucketization_op_op_lib",
         "//tensorflow/contrib/layers:sparse_feature_cross_op_op_lib",
+        "//tensorflow/contrib/nccl:nccl_ops_op_lib",
         "//tensorflow/contrib/tensor_forest:tensor_forest_ops_op_lib",
     ],
 )
