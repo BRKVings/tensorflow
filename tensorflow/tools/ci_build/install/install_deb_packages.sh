@@ -28,6 +28,7 @@ if [[ "$1" != "" ]] && [[ "$1" != "--without_cmake" ]]; then
 fi
 
 # Install dependencies from ubuntu deb repository.
+apt-key adv --keyserver keyserver.ubuntu.com --recv 084ECFC5828AB726
 apt-get update
 
 if [[ "$ubuntu_version" == "14" ]]; then
@@ -41,11 +42,13 @@ apt-get install -y --no-install-recommends \
     autoconf \
     automake \
     build-essential \
+    clang-format-3.8 \
     curl \
     ffmpeg \
     git \
     libcurl4-openssl-dev \
     libtool \
+    mlocate \
     openjdk-8-jdk \
     openjdk-8-jre-headless \
     pkg-config \
@@ -62,6 +65,9 @@ apt-get install -y --no-install-recommends \
     wget \
     zip \
     zlib1g-dev
+
+# populate the database
+updatedb
 
 if [[ "$1" != "--without_cmake" ]]; then
   apt-get install -y --no-install-recommends \
